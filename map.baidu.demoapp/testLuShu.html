@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            font-family: "微软雅黑";
+        }
+
+        #map_canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        #result {
+            width: 100%
+        }
+    </style>
+    <script src="http://libs.baidu.com/jquery/1.9.1/jquery.min.js"></script>
+    <script src="http://api.map.baidu.com/api?v=2.0&ak=IkkBXEj1tbKb64ZcZvj3E33X"></script>
+    <script type="application/javascript">
+        $(document).ready(function () {
+
+            function demo1() {
+
+
+                var map = new BMap.Map('map_canvas');
+                map.enableScrollWheelZoom();
+                map.centerAndZoom(new BMap.Point(116.404, 39.915), 13);
+
+                // 实例化一个驾车导航用来生成路线
+                var drv = new BMap.DrivingRoute('北京', {
+                    onSearchComplete: function (res) {
+                        if (drv.getStatus() == BMAP_STATUS_SUCCESS) {
+                            var arrPois = res.getPlan(0).getRoute(0).getPath();
+                            map.addOverlay(new BMap.Polyline(arrPois, {strokeColor: '#111'}));
+                            map.setViewport(arrPois);
+                        }
+                    }
+                });
+
+                drv.search('天安门', '百度大厦');
+            }
+
+            function demo2() {
+                // 百度地图API功能
+                var map = new BMap.Map("map_canvas");
+                map.centerAndZoom(new BMap.Point(116.404, 39.915), 11);
+                map.enableScrollWheelZoom(true);
+
+                var p1 = new BMap.Point(116.301934, 39.977552);
+                var p2 = new BMap.Point(116.508328, 39.919141);
+
+                var driving = new BMap.DrivingRoute(map, {renderOptions: {map: map, autoViewport: true}});
+                driving.search(p1, p2, {waypoints: ["中华民族园", "对外经贸大学"]});//waypoints表示途经点
+            }
+
+            function demo3(){
+                // 百度地图API功能
+                var map = new BMap.Map("map_canvas");
+                map.enableScrollWheelZoom(true);
+                map.centerAndZoom(new BMap.Point(116.404, 39.915), 12);
+                var transit = new BMap.DrivingRoute(map, {
+                    renderOptions: {
+                        map: map,
+                        panel: "r-result",
+                        enableDragging : true //起终点可进行拖拽
+                    },
+                });
+                transit.search("西单","魏公村");
+            }
+            demo3();
+
+        });
+    </script>
+</head>
+<body>
+<table style="width:100%;">
+    <tr>
+        <td width="50%">
+            parameters
+            <br>
+            起点<input type="text" id="startPoint"/>
+            终点<input type="text" id="endPoint"/>
+            途经点<input type="text" id="tjPoint"/>
+            <br>
+            <button id="btnSelStart" type="button">选取起点</button>
+            <button id="btnSelEnd" type="button">选取终点</button>
+            <button id="btnSelPath" type="button">添加途径点</button>
+
+        </td>
+        <td height="300">
+            <div id="map_canvas"></div>
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>
+            <div id="r-result"></div>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

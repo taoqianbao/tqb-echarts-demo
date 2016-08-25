@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            font-family: "微软雅黑";
+        }
+
+        #map_canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        #result {
+            width: 100%;
+        }
+    </style>
+    <script src="http://libs.baidu.com/jquery/1.9.1/jquery.min.js"></script>
+
+    <!--<script type="text/javascript" src="http://api.map.baidu.com/api?type=quick&ak=IkkBXEj1tbKb64ZcZvj3E33X&v=1.0"></script>-->
+    <script src="http://api.map.baidu.com/api?v=2.0&ak=IkkBXEj1tbKb64ZcZvj3E33X"></script>
+
+    <script>
+        $(document).ready(function () {
+            // 百度地图API功能
+            var map = new BMap.Map("map_canvas");            // 创建Map实例
+            var point = new BMap.Point(116.404, 39.915); // 创建点坐标
+            map.centerAndZoom(point, 15);                 // 初始化地图,设置中心点坐标和地图级别。
+
+            map.enableScrollWheelZoom(true);
+            //map.addControl(new BMap.ZoomControl());      //添加地图缩放控件
+
+            map.addEventListener('click', function (e) {
+                console.log(e.point);
+            });
+
+            function addMarker(point) {
+                if (point == null || point.p == null) {
+                    point.p = map.getCenter();
+                }
+                /*    http://api0.map.bdimg.com/images/dest_markers.png
+                            http://api.map.baidu.com/img/markers.png*/
+                var myIcon = new BMap.Icon("http://api.map.baidu.com/img/dest_markers.png", new BMap.Size(35, 35), {
+                    offset: new BMap.Size(0, 0), // 指定定位位置
+                    imageOffset: new BMap.Size(0, 0 - 0 * 0) // 设置图片偏移
+                });
+
+                //var point= new BMap.Point(116.404, 39.915);
+                var marker = new BMap.Marker(point.p, {
+                    icon: myIcon,
+                    enableDragging: true,
+                    raiseOnDrag: true
+                });        // 创建标注
+
+                var label = new BMap.Label(point.label, { offset: new BMap.Size(20, -10) });
+                marker.setLabel(label);
+                marker.enableDragging();
+                marker.addEventListener("dragend", function (e) {
+                    point.p = e.point;
+                    console.log("x,y=", e.point.lng + ", " + e.point.lat, point.label, point.p);
+                });
+                map.addOverlay(marker);
+
+                //map.removeOverlay(marker);
+                //marker.dispose(); // 1.1 版本不需要这样调用
+            }
+
+            var pointA = {
+                label: '起点',
+                p: null
+            };
+            var pointB = {
+                label: '终点'
+                , p: null
+            };
+
+            $("#btnSelStart").bind('click', function () {
+                pointA.p = map.getCenter();
+                //map.getBounds().getCenter();
+                addMarker(pointA);
+            });
+            $("#btnSelEnd").bind('click', function () {
+                pointB.p = map.getCenter();
+                addMarker(pointB);
+            });
+
+            var pointPath = [];
+            $("#btnSelPath").bind('click', function () {
+                var op = {
+                    label: '途经点' + (pointPath.length + 1),
+                    p: map.getCenter()
+                };
+                pointPath.push(op);
+                addMarker(op);
+            });
+
+            $("#btnBuildPath").bind("click", function () {
+
+                var aP = [];
+
+                $.each(pointPath, function (i, o) {
+                    aP.push(o.p);
+                });
+
+                var driving = new BMap.DrivingRoute(map, { renderOptions: { map: map, autoViewport: true } });
+                /* driving.search(pointA.p, pointB.p);*/
+                driving.search(pointA.p, pointB.p, { waypoints: aP });
+
+            });
+        });
+    </script>
+</head>
+<body>
+    <table style="width:100%;">
+        <tr>
+            <td width="50%">
+                parameters
+                <button id="btnSelStart" type="button">选取起点</button>
+                <button id="btnSelEnd" type="button">选取终点</button>
+                <button id="btnSelPath" type="button">添加途径点</button>
+
+                <button id="btnBuildPath" type="button">生成路线图</button>
+            </td>
+            <td height="300">
+                <div id="map_canvas"></div>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <div id="r-result"></div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
